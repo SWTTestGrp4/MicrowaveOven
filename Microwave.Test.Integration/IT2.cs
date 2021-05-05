@@ -46,7 +46,7 @@ namespace Microwave.Test.Integration
             //ASSERT
             Assert.That(str.ToString().Contains($"PowerTube works with {power}"));
         }
-
+        
         [TestCase(0, 10)]
         [TestCase(1, 10)]
         [TestCase(701, 10)]
@@ -56,9 +56,10 @@ namespace Microwave.Test.Integration
             Assert.Throws<System.ArgumentOutOfRangeException>(() => _ctrl.StartCooking(power, time));
         }
 
-        [TestCase(80, 10)]
-        [TestCase(80, 90)]
         [TestCase(80, 60)]
+        [TestCase(80, 0)]
+        [TestCase(80, 1)]
+        [TestCase(80, 180)]
         public void CookCtrl_StartCooking_TimerStartedWithCorrectTime(int power, int time)
         {
             //ACT
@@ -68,17 +69,29 @@ namespace Microwave.Test.Integration
             Assert.That(_timer.TimeRemaining, Is.EqualTo(time * 1000)); //times 1000 to turn sec into millisec
         }
 
+        
+        [TestCase(100, 1)]
         [TestCase(100, 60)]
         public void CookCtrl_StartCookingTimerExpired_UIReceivedCookingIsDone(int power, int time)
         {
             //ACT
             _ctrl.StartCooking(power, time);
             //Når der er gået noget tid, ses om der blev received cooking is done.
-            Thread.Sleep(61000);
-
+            Thread.Sleep(time*1000+100);
 
             //ASSERT
             _ui.Received(1).CookingIsDone();
+        }
+        [TestCase(100, 0)]
+        public void CookCtrl_StartCookingTimerIs0_UIDidNotReceiveCookingIsDone(int power, int time)
+        {
+            //ACT
+            _ctrl.StartCooking(power, time);
+            //Når der er gået noget tid, ses om der blev received cooking is done.
+            Thread.Sleep(time * 1000);
+
+            //ASSERT
+            _ui.DidNotReceive().CookingIsDone();
         }
 
         [TestCase(100, 60)]
@@ -113,6 +126,7 @@ namespace Microwave.Test.Integration
             //ASSERT
             _ui.DidNotReceive().CookingIsDone();
         }
+
         [TestCase(100, 60)]
         public void CookCtrl_StartCookingAndStopPrematurely_PowerTubeTurnedOff(int power, int time)
         {
@@ -124,5 +138,6 @@ namespace Microwave.Test.Integration
             Assert.That(str.ToString().Contains($"PowerTube turned off"));
         }
 
+       
     }
 }
