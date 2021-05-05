@@ -21,6 +21,9 @@ namespace Microwave.Test.Integration
         private IButton fakeCancelButton;
         private IButton fakePowerButton;
         private IButton fakeTimeButton;
+        private IButton fakeCancelButton2;
+        private IButton fakePowerButton2;
+        private IButton fakeTimeButton2;
         private IDoor fakeDoor;
         private IOutput _output;
         private IDisplay _display;
@@ -48,12 +51,11 @@ namespace Microwave.Test.Integration
             _fakeTimer = Substitute.For<ITimer>();
             _powerTube = new PowerTube(_output);
             _cookController = new CookController(_timer, _display, _powerTube);
-            _cookController2 = new CookController(_fakeTimer, _display, _powerTube);
+            
             _uut = new UserInterface(fakePowerButton, fakeTimeButton, fakeCancelButton, fakeDoor, _display, _light,
                 _cookController);
             _cookController.UI = _uut;
-            _uut2 = new UserInterface(fakePowerButton, fakeTimeButton, fakeCancelButton, fakeDoor, _display, _light,
-                _cookController2);
+            
 
         }
 
@@ -365,20 +367,24 @@ namespace Microwave.Test.Integration
         [Test]
         public void UserInterface_TimerRaisesExpiredEventAndStateCooking_LightTurnOffAndDisplayClears()
         {
-            //Denne her test har kørt rigtigt nogle gange, og andre gange ikke. Når jeg debugger,
-            //kan jeg se, at de rigtige ting bliver kaldt od udskrevet, men testen fejler alligevel.
             //Arrange
-            
-            fakePowerButton.Pressed += Raise.Event();
-            fakeTimeButton.Pressed += Raise.Event();
-            fakeCancelButton.Pressed += Raise.Event();
+            fakeCancelButton2 = Substitute.For<IButton>();
+            fakePowerButton2 = Substitute.For<IButton>();
+            fakeTimeButton2 = Substitute.For<IButton>();
+            _cookController2 = new CookController(_fakeTimer, _display, _powerTube);
+            _uut2 = new UserInterface(fakePowerButton2, fakeTimeButton2, fakeCancelButton2, fakeDoor, _display, _light,
+                _cookController2);
+            _cookController2.UI = _uut2;
+
+            fakePowerButton2.Pressed += Raise.Event();
+            fakeTimeButton2.Pressed += Raise.Event();
+            fakeCancelButton2.Pressed += Raise.Event();
 
             //Act
             _fakeTimer.Expired += Raise.Event();
-            //Thread.Sleep(61000);
 
             //Assert
-            //Assert.That(str.ToString().Contains("Light is turned off"));
+            Assert.That(str.ToString().Contains("Light is turned off"));
             Assert.That(str.ToString().Contains("Display cleared"));
 
         }
