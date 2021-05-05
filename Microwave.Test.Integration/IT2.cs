@@ -56,6 +56,17 @@ namespace Microwave.Test.Integration
             Assert.Throws<System.ArgumentOutOfRangeException>(() => _ctrl.StartCooking(power, time));
         }
 
+        [TestCase(100,10)]
+        public void CoockCtrl_StartCookingTwice_ThrowsApplicationException(int power, int time)
+        {
+            //ACT
+            _ctrl.StartCooking(power,time);
+
+            //ASSERT
+            Assert.Throws<System.ApplicationException>(() => _ctrl.StartCooking(power, time));
+
+        }
+
         [TestCase(80, 60)]
         [TestCase(80, 0)]
         [TestCase(80, 1)]
