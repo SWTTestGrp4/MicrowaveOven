@@ -44,7 +44,7 @@ namespace Microwave.Classes.Controllers
         private void ResetValues()
         {
             powerLevel = 50;
-            time = 1;
+            time = 1; //minut
         }
 
         public void OnPowerPressed(object sender, EventArgs e)

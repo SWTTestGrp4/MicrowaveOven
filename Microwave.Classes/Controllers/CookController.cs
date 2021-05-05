@@ -37,10 +37,11 @@ namespace Microwave.Classes.Controllers
             timer.TimerTick += new EventHandler(OnTimerTick);
         }
 
-        public void StartCooking(int power, int time)
+        public void StartCooking(int power, int time) //Tiden er i sekunder her. 60 er 60 sek aka 1 min
         {
             myPowerTube.TurnOn(power);
-            myTimer.Start(time);
+            int timeInMs = time * 1000;
+            myTimer.Start(timeInMs);
             isCooking = true;
         }
 
@@ -65,7 +66,7 @@ namespace Microwave.Classes.Controllers
         {
             if (isCooking)
             {
-                int remaining = myTimer.TimeRemaining;
+                int remaining = myTimer.TimeRemaining/1000;
                 myDisplay.ShowTime(remaining / 60, remaining % 60);
             }
         }
