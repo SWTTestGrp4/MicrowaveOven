@@ -11,10 +11,10 @@ namespace Microwave.Test.Integration
     public class IT1
     {
 
-        private Light uut_light;
-        private PowerTube uut_Pt;
-        private Display uut_display;
-        private StringWriter str;
+        private Light _uut_light;
+        private PowerTube _uut_Pt;
+        private Display _uut_display;
+        private StringWriter _str;
         private IOutput _output;
 
         [SetUp]
@@ -22,34 +22,60 @@ namespace Microwave.Test.Integration
         {
 
             _output = new Output();
-            uut_light = new Light(_output);
-            uut_Pt = new PowerTube(_output);
-            uut_display = new Display(_output);
-            str = new StringWriter();
-            Console.SetOut(str); //Setup Console to be str
+            _uut_light = new Light(_output);
+            _uut_Pt = new PowerTube(_output);
+            _uut_display = new Display(_output);
+            _str = new StringWriter();
+            Console.SetOut(_str); //Setup Console to be str
 
         }
 
         #region Display IT
+        [TestCase (0,0)]
+        [TestCase (1,0)]
+        [TestCase(0,1)]
         [TestCase (2,33)]
         public void ShowTime_CallMethod_OutputShowsTime(int min, int sec)
         {
-            uut_display.ShowTime(min, sec);
-            Assert.That(str.ToString().Contains("02:33"));
+            //ACT
+            _uut_display.ShowTime(min, sec);
+
+            //ASSERT
+            Assert.That(_str.ToString().Contains($"{min:D2}:{sec:D2}"));
         }
 
-        [TestCase(3)]
-        public void ShowPower_CallMethod_OutputShowsPower(int power)
+        [TestCase(0)]
+        [TestCase(1)]
+        [TestCase(49)]
+        [TestCase(701)]
+        public void ShowPower_ValuesOutsideBoundaries_ExceptionThrown(int power)
         {
-            uut_display.ShowPower(power);
-            Assert.That(str.ToString().Contains("3 W"));
+            //ACT
+            _uut_display.ShowPower(power);
+
+            //ASSERT
+            Assert.Throws<System.ArgumentOutOfRangeException>(() => _uut_Pt.TurnOn(power));
+        }
+
+        [TestCase(50)]
+        [TestCase(700)]
+        public void ShowPower_ValuesInsideBoundaries_OutputShowsPower(int power)
+        {
+            //ACT
+            _uut_display.ShowPower(power);
+            
+            //ASSERT
+            Assert.That(_str.ToString().Contains($"{power} W"));
         }
 
         [Test]
         public void ClearOutput_CallMethod_OutputShowsCleared()
         {
-            uut_display.Clear();
-            Assert.That(str.ToString().Contains("cleared"));
+            //ACT
+            _uut_display.Clear();
+
+            //ASSERT
+            Assert.That(_str.ToString().Contains("cleared"));
         }
 
         #endregion
@@ -58,65 +84,72 @@ namespace Microwave.Test.Integration
         [Test]
         public void LightOn_WasOff_OutputShowsLightIsOn()
         {
-            uut_light.TurnOn();
-            Assert.That(str.ToString().Contains("on"));
-           // _output.Received(1).OutputLine(Arg.Is<string>(str => str.Contains("on")));
+            //ACT
+            _uut_light.TurnOn();
+
+            //ASSERT
+            Assert.That(_str.ToString().Contains("on"));
         }
 
         [Test]
         public void LightOff_WasOff_CantReceive()
         {
-            _output = Substitute.For<IOutput>();
-            uut_light.TurnOff();
-            _output.DidNotReceive().OutputLine(Arg.Is<string>(str => str.Contains("off")));
+            //ACT
+            _uut_light.TurnOff();
+
+            //ASSERT
+            Assert.That(_str.ToString().Contains("")); //Assert that the string is empty
         }
 
 
         [Test]
         public void LightOn_WasOn_OutputShowsLightIsOn()
         {
-            uut_light.TurnOn();
-            uut_light.TurnOn();
-            Assert.That(str.ToString().Contains("on"));
+            _uut_light.TurnOn();
+            _uut_light.TurnOn();
+            Assert.That(_str.ToString().Contains("on"));
         }
 
         [Test]
         public void LightOff_WasOn_LightOff()
         {
-            uut_light.TurnOn();
-            uut_light.TurnOff();
-            Assert.That(str.ToString().Contains("off"));
+            _uut_light.TurnOn();
+            _uut_light.TurnOff();
+            Assert.That(_str.ToString().Contains("off"));
         }
 
         #endregion
         #region PowerTube IT
-        [TestCase (5)]
+        [TestCase (700)]
         [TestCase (50)]
         [TestCase(95)]
-        public void PowertubeOn_TurnOn_OutputShowsPowerTubeIsOn(int power)
+        public void PowertubeOn_TurnOnWithValuesInsideRange_OutputShowsPowerTubeIsOn(int power)
         {
-            uut_Pt.TurnOn(power);
-            Assert.That(str.ToString().Contains($"PowerTube works with {power}"));
-            //TODO I guess I dont need to test on the exceptions since they have nothing to do with integration btween PowerTube and Output?
-        }
-
-        [TestCase (5)]
-        public void PowertubeOff_TurnPowerOnThenOff_OutputShowsPowerTubeIsOff(int power)
-        {
-            uut_Pt.TurnOn(power);
-            uut_Pt.TurnOff();
-            Assert.That(str.ToString().Contains("off"));
-            //TODO I guess I dont need to test on the exceptions since they have nothing to do with integration btween PowerTube and Output?
+            _uut_Pt.TurnOn(power);
+            Assert.That(_str.ToString().Contains($"PowerTube works with {power}"));
         }
 
         [Test]
-        public void PowertubeOff_TurnPowerOff_NotReceived()
+        public void PowertubeOffWasOff_TurnPowerOff_NotReceived()
         {
-            _output = Substitute.For<IOutput>();
-            uut_Pt.TurnOff();
-            _output.DidNotReceive().OutputLine(Arg.Is<string>(str => str.Contains("off")));
+            //ACT
+            _uut_Pt.TurnOff();
+
+            //ASSERT
+            Assert.That(_str.ToString().Contains("")); //Assert that string is empty
         }
 
+        [TestCase(50)]
+        public void PowertubeOffWasOn_TurnPowerOnThenOff_PowerTubeOff(int power)
+        {
+            //ACT
+            _uut_Pt.TurnOn(power);
+            _uut_Pt.TurnOff();
+
+            //ASSERT
+            Assert.That(_str.ToString().Contains("off")); 
+
+        }
         #endregion
     }
 }
